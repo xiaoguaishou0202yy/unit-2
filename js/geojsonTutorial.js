@@ -1,18 +1,19 @@
-const map = L.map('map').setView([39.74739, -105], 13);
+const map = L.map('map').setView([39.74739, -105], 13); //create a Leaflet map object; set the initial map view
 
-const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
+const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { //add a tile layer to the map using OpenStreetMap tiles
+    maxZoom: 19, //set maximum zoom level
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map);
+}).addTo(map); //add the tile layer to the map
 
-const baseballIcon = L.icon({
-    iconUrl: 'baseball-marker.png',
-    iconSize: [32, 37],
-    iconAnchor: [16, 37],
-    popupAnchor: [0, -28]
+const baseballIcon = L.icon({ //create a icon for baseball field
+    iconUrl: 'img/baseball.svg', //URL of the icon image
+    iconSize: [28, 30], //size of the icon
+    iconAnchor: [16, 37], //anchor point of the icon
+    popupAnchor: [0, -28] //popup anchor point
 });
 
 
+//GeoJSON data for a free bus line, light rail stops, bicycle rental stations, the Auraria West Campus and Coors Field
 var freeBus = {
     "type": "FeatureCollection",
     "features": [
@@ -262,26 +263,29 @@ var coorsField = {
     }
 };
 
+
 function onEachFeature(feature, layer) {
+    //generate HTML content for the popup based on the properties of GeoJSON features on the map
     let popupContent = `<p>I started out as a GeoJSON ${feature.geometry.type}, but now I'm a Leaflet vector!</p>`;
 
     if (feature.properties && feature.properties.popupContent) {
-        popupContent += feature.properties.popupContent;
+        popupContent += feature.properties.popupContent; //append additional popup content
     }
 
-    layer.bindPopup(popupContent);
+    layer.bindPopup(popupContent); //blind the popup content to the layer 
 }
 
 /* global campus, bicycleRental, freeBus, coorsField */
+//create Leaflet feature layers for different features
 const bicycleRentalLayer = L.geoJSON([bicycleRental, campus], {
 
-    style(feature) {
+    style(feature) { //define style
         return feature.properties && feature.properties.style;
     },
 
-    onEachFeature,
+    onEachFeature, //define interactions
 
-    pointToLayer(feature, latlng) {
+    pointToLayer(feature, latlng) { //define circle markers for the point features
         return L.circleMarker(latlng, {
             radius: 8,
             fillColor: '#ff7800',
@@ -295,7 +299,7 @@ const bicycleRentalLayer = L.geoJSON([bicycleRental, campus], {
 
 const freeBusLayer = L.geoJSON(freeBus, {
 
-    filter(feature, layer) {
+    filter(feature, layer) { //filter features based on their properties
         if (feature.properties) {
             // If the property "underConstruction" exists and is true, return false (don't render features under construction)
             return feature.properties.underConstruction !== undefined ? !feature.properties.underConstruction : true;
@@ -303,14 +307,14 @@ const freeBusLayer = L.geoJSON(freeBus, {
         return false;
     },
 
-    onEachFeature
+    onEachFeature //define interactions
 }).addTo(map);
 
 const coorsLayer = L.geoJSON(coorsField, {
 
-    pointToLayer(feature, latlng) {
+    pointToLayer(feature, latlng) { //create markers for point features
         return L.marker(latlng, {icon: baseballIcon});
     },
 
-    onEachFeature
+    onEachFeature //define interactions
 }).addTo(map);
