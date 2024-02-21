@@ -31,6 +31,36 @@ function onEachFeature(feature, layer) {
     };
 };
 
+//Step 3: Add circle markers for point features to the map
+function createPropSymbols(data){
+    //Step 4: Determine which attribute to visualize with proportional symbols
+    var attribute = "2010_ImCIF";
+
+    //create marker options
+    var geojsonMarkerOptions = {
+        radius: 8,
+        fillColor: "#ff7800",
+        color: "#000",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+    };
+
+    //create a Leaflet GeoJSON layer and add it to the map
+    L.geoJson(data, {
+        pointToLayer: function (feature, latlng) {
+            //Step 5: For each feature, determine its value for the selected attribute
+            var attValue = Number(String(feature.properties[attribute]).replace(',',''));
+
+            //examine the attribute value to check that it is correct
+            console.log(feature.properties, attValue);
+
+            return L.circleMarker(latlng, geojsonMarkerOptions);
+        },
+        onEachFeature: onEachFeature
+    }).addTo(map);
+};
+
 //function to retrieve the data and place it on the map
 function getData(){
     //load the data
@@ -38,24 +68,11 @@ function getData(){
         .then(function(response){
             return response.json();
         })
-        .then(function(json){            
-            //create marker options
-            var geojsonMarkerOptions = {
-                radius: 8,
-                fillColor: "#ff7800",
-                color: "#000",
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 0.8
-            };
-            //create a Leaflet GeoJSON layer and add it to the map
-            L.geoJson(json, {
-                pointToLayer: function (feature, latlng){
-                    return L.circleMarker(latlng, geojsonMarkerOptions);
-                },
-                onEachFeature: onEachFeature
-            }).addTo(map);
-        });
+        .then(function(json){ 
+            //call function to create proportional symbols
+            createPropSymbols(json);
+        })           
+
 };
 
 document.addEventListener('DOMContentLoaded',createMap)
