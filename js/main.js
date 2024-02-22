@@ -19,6 +19,49 @@ function createMap(){
     getData();
 };
 
+
+//Flannery scaling ratio
+var minValue;
+
+function calcMinValue(data){
+    //create empty array to store all data values
+    var allValues = [];
+    //loop through each city
+    for(var region of data.features){
+        //loop through each year
+
+        var years=[1995,2005,2010,2015,2020,2021,2022];
+            for (var year in years) {
+                //get population for current year
+                var value = Number(String(region.properties[years[year]+"_ImCIF"]).replaceAll(',','')); 
+                //add value to array
+                console.log(years[year]+"_ImCIF",value)
+                allValues.push(value);
+            } 
+
+    
+    //add value to array
+    }
+
+    //console.log(allValues)
+
+    //get minimum value of our array
+    var minValue = Math.min(...allValues)
+
+    return minValue;
+}
+
+
+//calculate the radius of each proportional symbol
+function calcPropRadius(attValue) {
+    //constant factor adjusts symbol sizes evenly
+    var minRadius = 5;
+    //Flannery Appearance Compensation formula
+    var radius = 1.0083 * Math.pow(attValue/minValue,0.5715) * minRadius
+
+    return radius;
+};
+
 function onEachFeature(feature, layer) {
     //no property named popupContent; instead, create html string with all properties
     var popupContent = "";
@@ -34,7 +77,7 @@ function onEachFeature(feature, layer) {
 //Step 3: Add circle markers for point features to the map
 function createPropSymbols(data){
     //Step 4: Determine which attribute to visualize with proportional symbols
-    var attribute = "2010_ImCIF";
+    var attribute = "1995_ImCIF";
 
     //create marker options
     var geojsonMarkerOptions = {
@@ -52,9 +95,10 @@ function createPropSymbols(data){
             //Step 5: For each feature, determine its value for the selected attribute
             var attValue = Number(String(feature.properties[attribute]).replace(',',''));
 
-            //examine the attribute value to check that it is correct
-            console.log(feature.properties, attValue);
+            //Step 6: Give each feature's circle marker a radius based on its attribute value
+            geojsonMarkerOptions.radius = calcPropRadius(attValue);
 
+            //create circle markers
             return L.circleMarker(latlng, geojsonMarkerOptions);
         },
         onEachFeature: onEachFeature
@@ -69,6 +113,8 @@ function getData(){
             return response.json();
         })
         .then(function(json){ 
+            //calculate minimum data value
+            minValue = calcMinValue(json);
             //call function to create proportional symbols
             createPropSymbols(json);
         })           
