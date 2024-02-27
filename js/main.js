@@ -34,8 +34,6 @@ function calcMinValue(data){
             for (var year in years) {
                 //get population for current year
                 var value = Number(String(region.properties[years[year]+"_ImCIF"]).replaceAll(',','')); 
-                //add value to array
-                console.log(years[year]+"_ImCIF",value)
                 allValues.push(value);
             } 
 
@@ -55,7 +53,7 @@ function calcMinValue(data){
 //calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
     //constant factor adjusts symbol sizes evenly
-    var minRadius = 5;
+    var minRadius = 1;
     //Flannery Appearance Compensation formula
     var radius = 1.0083 * Math.pow(attValue/minValue,0.5715) * minRadius
 
@@ -74,14 +72,16 @@ function onEachFeature(feature, layer) {
     };
 };
 
-//Step 3: Add circle markers for point features to the map
-function createPropSymbols(data){
-    //Step 4: Determine which attribute to visualize with proportional symbols
+
+
+
+//function to convert markers to circle markers
+function pointToLayer(feature, latlng){
+    //Determine which attribute to visualize with proportional symbols
     var attribute = "1995_ImCIF";
 
     //create marker options
-    var geojsonMarkerOptions = {
-        radius: 8,
+    var options = {
         fillColor: "#ff7800",
         color: "#000",
         weight: 1,
@@ -89,21 +89,39 @@ function createPropSymbols(data){
         fillOpacity: 0.8
     };
 
+    //For each feature, determine its value for the selected attribute
+    var attValue = Number(String(feature.properties[attribute]).replaceAll(',',''));
+
+    //Give each feature's circle marker a radius based on its attribute value
+    options.radius = calcPropRadius(attValue);
+
+    //create circle marker layer
+    var layer = L.circleMarker(latlng, options);
+
+    //build popup content string
+    var popupContent = "<p><b>Region:</b> " + feature.properties.Region + "</p>";
+
+    //add formatted attribute to popup content string
+    var year = attribute.split("_")[0];
+    popupContent += "<p><b>Imports CIF in " + year + ":</b> " + feature.properties[attribute] + " millions of US dollars</p>";
+
+    //bind the popup to the circle marker
+    layer.bindPopup(popupContent, {
+        offset: new L.Point(0,-options.radius) 
+    });
+
+    //return the circle marker to the L.geoJson pointToLayer option
+    return layer;
+};
+
+//Add circle markers for point features to the map
+function createPropSymbols(data){
     //create a Leaflet GeoJSON layer and add it to the map
     L.geoJson(data, {
-        pointToLayer: function (feature, latlng) {
-            //Step 5: For each feature, determine its value for the selected attribute
-            var attValue = Number(String(feature.properties[attribute]).replace(',',''));
-
-            //Step 6: Give each feature's circle marker a radius based on its attribute value
-            geojsonMarkerOptions.radius = calcPropRadius(attValue);
-
-            //create circle markers
-            return L.circleMarker(latlng, geojsonMarkerOptions);
-        },
-        onEachFeature: onEachFeature
+        pointToLayer: pointToLayer
     }).addTo(map);
 };
+
 
 //function to retrieve the data and place it on the map
 function getData(){
