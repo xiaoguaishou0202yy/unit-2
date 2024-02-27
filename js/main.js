@@ -122,6 +122,23 @@ function createPropSymbols(data){
     }).addTo(map);
 };
 
+//Create new sequence controls
+function createSequenceControls(){
+    //create range input element (slider)
+    var slider = "<input class='range-slider' type='range'></input>";
+    document.querySelector("#panel").insertAdjacentHTML('beforeend',slider);
+    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="reverse">Reverse</button>');
+    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="forward">Forward</button>');
+    //replace button content with images
+    document.querySelector('#reverse').insertAdjacentHTML('beforeend',"<img src='img/reverse.png'>")
+    document.querySelector('#forward').insertAdjacentHTML('beforeend',"<img src='img/forward.png'>")
+
+    //set slider attributes
+    document.querySelector(".range-slider").max = 6;
+    document.querySelector(".range-slider").min = 0;
+    document.querySelector(".range-slider").value = 0;
+    document.querySelector(".range-slider").step = 1;
+};
 
 //function to retrieve the data and place it on the map
 function getData(){
@@ -135,6 +152,7 @@ function getData(){
             minValue = calcMinValue(json);
             //call function to create proportional symbols
             createPropSymbols(json);
+            createSequenceControls();
         })           
 
 };
