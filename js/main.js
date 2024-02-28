@@ -40,9 +40,7 @@ function calcMinValue(data){
     
     //add value to array
     }
-
     //console.log(allValues)
-
     //get minimum value of our array
     var minValue = Math.min(...allValues)
 
@@ -73,12 +71,13 @@ function onEachFeature(feature, layer) {
 };
 
 
-
-
 //function to convert markers to circle markers
-function pointToLayer(feature, latlng){
+function pointToLayer(feature, latlng, attributes){
     //Determine which attribute to visualize with proportional symbols
-    var attribute = "1995_ImCIF";
+    var attribute = attributes[0];
+    //check
+    //console.log(attribute);
+
 
     //create marker options
     var options = {
@@ -115,15 +114,17 @@ function pointToLayer(feature, latlng){
 };
 
 //Add circle markers for point features to the map
-function createPropSymbols(data){
+function createPropSymbols(data, attributes){
     //create a Leaflet GeoJSON layer and add it to the map
     L.geoJson(data, {
-        pointToLayer: pointToLayer
+        pointToLayer: function(feature, latlng){
+            return pointToLayer(feature, latlng, attributes);
+        }
     }).addTo(map);
 };
 
 //Create new sequence controls
-function createSequenceControls(){
+function createSequenceControls(attributes){
     //create range input element (slider)
     var slider = "<input class='range-slider' type='range'></input>";
     document.querySelector("#panel").insertAdjacentHTML('beforeend',slider);
@@ -138,10 +139,94 @@ function createSequenceControls(){
     document.querySelector(".range-slider").min = 0;
     document.querySelector(".range-slider").value = 0;
     document.querySelector(".range-slider").step = 1;
+
+    //click listener for buttons
+    document.querySelectorAll('.step').forEach(function(step){
+        step.addEventListener("click", function(){
+            var index = document.querySelector('.range-slider').value;
+
+            //increment or decrement depending on button clicked
+            if (step.id == 'forward'){
+                index++;
+                //if past the last attribute, wrap around to first attribute
+                index = index > 6 ? 0 : index;
+            } else if (step.id == 'reverse'){
+                index--;
+                //if past the first attribute, wrap around to last attribute
+                index = index < 0 ? 6 : index;
+            };
+
+            //Step 8: update slider
+            document.querySelector('.range-slider').value = index;
+            //console.log(index);
+
+            updatePropSymbols(attributes[index]);
+
+        })
+    })
+
+    //input listener for slider
+    document.querySelector('.range-slider').addEventListener('input', function(){            
+        //get the new index value
+        var index = this.value;
+        console.log(index);
+        updatePropSymbols(attributes[index]);
+    });
+
+};
+
+//Step 10: Resize proportional symbols according to new attribute values
+function updatePropSymbols(attribute){
+    map.eachLayer(function(layer){
+        if (layer.feature && layer.feature.properties[attribute]){
+            //access feature properties
+            var props = layer.feature.properties;
+            
+
+            //update each feature's radius based on new attribute values
+            var radius = calcPropRadius(Number(String(props[attribute]).replaceAll(',','')));
+            layer.setRadius(radius);
+
+            //add city to popup content string
+            var popupContent = "<p><b>Region:</b> " + props.Region + "</p>";
+
+            //add formatted attribute to panel content string
+            var year = attribute.split("_")[0];
+            popupContent += "<p><b>Imports CIF in " + year + ":</b> " + props[attribute] + " millions of US dollars</p>";
+
+            //update popup content            
+            popup = layer.getPopup();            
+            popup.setContent(popupContent).update();
+        };
+    });
+
+};
+
+
+//Above Example 3.10...Step 3: build an attributes array from the data
+function processData(data){
+    //empty array to hold attributes
+    var attributes = [];
+
+    //properties of the first feature in the dataset
+    var properties = data.features[0].properties;
+
+    //push each attribute name into attributes array
+    for (var attribute in properties){
+        //only take attributes with population values
+        if (attribute.indexOf("ImCIF") > -1){
+            attributes.push(attribute);
+        };
+    };
+
+    //check result
+    //console.log(attributes);
+
+    return attributes;
 };
 
 //function to retrieve the data and place it on the map
-function getData(){
+function getData(map){
     //load the data
     fetch("data/Imports_Exports_Regions.geojson")
         .then(function(response){
@@ -149,10 +234,11 @@ function getData(){
         })
         .then(function(json){ 
             //calculate minimum data value
+            var attributes = processData(json);
             minValue = calcMinValue(json);
             //call function to create proportional symbols
-            createPropSymbols(json);
-            createSequenceControls();
+            createPropSymbols(json,attributes);
+            createSequenceControls(attributes);
         })           
 
 };
