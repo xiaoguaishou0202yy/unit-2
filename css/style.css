@@ -16,13 +16,13 @@ html, body {
 }
 
 #map {    
-    height: 400px;    
-    width: 80%;
+    height: 600px;    
+    width: 75%;
     display: inline-block;
     }
 
 #panel {  
-    width: 25%;  
+    width: 22%;  
     padding: 20px;  
     display: inline-block;  
     vertical-align: top;  
@@ -39,7 +39,7 @@ html, body {
 }  
 
 .step img {  
-    width: 50%;  
+    width: 48%;  
 }  
 
 #forward {
