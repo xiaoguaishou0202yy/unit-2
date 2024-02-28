@@ -3,6 +3,8 @@
 //declare map var in global scope
 var map;
 //function to instantiate the Leaflet map
+
+
 function createMap(){
     //create the map
     map = L.map('map', {
@@ -70,6 +72,14 @@ function onEachFeature(feature, layer) {
     };
 };
 
+function PopupContent(properties, attribute){
+    this.properties = properties;
+    this.attribute = attribute;
+    this.year = attribute.split("_")[0];
+    this.importsCIF = this.properties[attribute];
+    this.formatted = "<p><b>Region:</b> " + this.properties.Region + "</p><p><b>Imports CIF in " + this.year + ":</b> " + this.importsCIF + " millions of US dollars</p>";
+};
+
 
 //function to convert markers to circle markers
 function pointToLayer(feature, latlng, attributes){
@@ -97,15 +107,21 @@ function pointToLayer(feature, latlng, attributes){
     //create circle marker layer
     var layer = L.circleMarker(latlng, options);
 
-    //build popup content string
-    var popupContent = "<p><b>Region:</b> " + feature.properties.Region + "</p>";
+    var popupContent = new PopupContent(feature.properties, attribute);
 
-    //add formatted attribute to popup content string
-    var year = attribute.split("_")[0];
-    popupContent += "<p><b>Imports CIF in " + year + ":</b> " + feature.properties[attribute] + " millions of US dollars</p>";
+    //create another popup based on the first
+    var popupContent2 = Object.create(popupContent);
+
+    //change the formatting of popup 2
+    popupContent2.formatted = "<h2>" + popupContent.importsCIF + " millions of dollars</h2>";
+
+    //add popup to circle marker    
+    layer.bindPopup(popupContent2.formatted);
+
+    console.log(popupContent.formatted) //original popup content
 
     //bind the popup to the circle marker
-    layer.bindPopup(popupContent, {
+    layer.bindPopup(popupContent2.formatted, {
         offset: new L.Point(0,-options.radius) 
     });
 
@@ -125,14 +141,33 @@ function createPropSymbols(data, attributes){
 
 //Create new sequence controls
 function createSequenceControls(attributes){
-    //create range input element (slider)
-    var slider = "<input class='range-slider' type='range'></input>";
-    document.querySelector("#panel").insertAdjacentHTML('beforeend',slider);
-    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="reverse"></button>');
-    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="forward"></button>');
-    //replace button content with images
-    document.querySelector('#reverse').insertAdjacentHTML('beforeend',"<img src='img/reverse.png'>")
-    document.querySelector('#forward').insertAdjacentHTML('beforeend',"<img src='img/forward.png'>")
+
+    var SequenceControl = L.Control.extend({
+        options: {
+            position: 'bottomleft'
+        },
+
+        onAdd: function () {
+            // create the control container div with a particular class name
+            var container = L.DomUtil.create('div', 'sequence-control-container');
+
+            // ... initialize other DOM elements
+            //create range input element (slider)
+            container.insertAdjacentHTML('beforeend', '<input class="range-slider" type="range">')
+
+            //add skip buttons
+            container.insertAdjacentHTML('beforeend', '<button class="step" id="reverse" title="Reverse"><img src="img/reverse.png"></button>'); 
+            container.insertAdjacentHTML('beforeend', '<button class="step" id="forward" title="Forward"><img src="img/forward.png"></button>');
+
+            //disable any mouse event listeners for the container
+            L.DomEvent.disableClickPropagation(container);
+            
+            return container;
+        }
+    });
+
+    map.addControl(new SequenceControl());    // add listeners after adding control}
+
 
     //set slider attributes
     document.querySelector(".range-slider").max = 6;
@@ -187,16 +222,11 @@ function updatePropSymbols(attribute){
             var radius = calcPropRadius(Number(String(props[attribute]).replaceAll(',','')));
             layer.setRadius(radius);
 
-            //add city to popup content string
-            var popupContent = "<p><b>Region:</b> " + props.Region + "</p>";
-
-            //add formatted attribute to panel content string
-            var year = attribute.split("_")[0];
-            popupContent += "<p><b>Imports CIF in " + year + ":</b> " + props[attribute] + " millions of US dollars</p>";
+            var popupContent = new PopupContent(props, attribute);  
 
             //update popup content            
             popup = layer.getPopup();            
-            popup.setContent(popupContent).update();
+            popup.setContent(popupContent.formatted).update();
         };
     });
 
