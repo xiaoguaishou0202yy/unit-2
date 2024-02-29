@@ -19,7 +19,7 @@ html, body {
     height: 600px;    
     width: 75%;
     display: inline-block;
-    }
+}
 
 .sequence-control-container {  
     width: 350px;  
@@ -43,6 +43,11 @@ html, body {
     width: 100%;  
     height: auto;  
 } 
+
+#Legend {    
+    height: 200px;    
+    width: 75%;
+}
 
 #forward {
     float: right;

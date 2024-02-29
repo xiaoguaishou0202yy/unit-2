@@ -161,13 +161,12 @@ function createSequenceControls(attributes){
 
             //disable any mouse event listeners for the container
             L.DomEvent.disableClickPropagation(container);
-            
+
             return container;
         }
     });
 
     map.addControl(new SequenceControl());    // add listeners after adding control}
-
 
     //set slider attributes
     document.querySelector(".range-slider").max = 6;
@@ -228,10 +227,31 @@ function updatePropSymbols(attribute){
             popup = layer.getPopup();            
             popup.setContent(popupContent.formatted).update();
         };
-    });
+
+        createLegend(attributes);
+    })
 
 };
 
+function createLegend(attributes){
+    var LegendControl = L.Control.extend({
+        options: {
+            position: 'bottomright'
+        },
+
+        onAdd: function () {
+            // create the control container with a particular class name
+            var container = L.DomUtil.create('div', 'legend-control-container');
+
+            //PUT YOUR SCRIPT TO CREATE THE TEMPORAL LEGEND HERE
+
+            return container;
+        }
+    });
+
+    map.addControl(new LegendControl());
+    
+};
 
 //Above Example 3.10...Step 3: build an attributes array from the data
 function processData(data){
@@ -269,6 +289,7 @@ function getData(map){
             //call function to create proportional symbols
             createPropSymbols(json,attributes);
             createSequenceControls(attributes);
+            
         })           
 
 };
