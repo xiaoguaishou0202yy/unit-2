@@ -211,12 +211,16 @@ function createSequenceControls(attributes){
 
 //Step 10: Resize proportional symbols according to new attribute values
 function updatePropSymbols(attribute){
+    var year = attribute.split("_")[0];
+    //update temporal legend
+    document.querySelector("span.year").innerHTML = year;
+
+    //attribute=attributes[index]
     map.eachLayer(function(layer){
         if (layer.feature && layer.feature.properties[attribute]){
             //access feature properties
             var props = layer.feature.properties;
             
-
             //update each feature's radius based on new attribute values
             var radius = calcPropRadius(Number(String(props[attribute]).replaceAll(',','')));
             layer.setRadius(radius);
@@ -228,7 +232,6 @@ function updatePropSymbols(attribute){
             popup.setContent(popupContent.formatted).update();
         };
 
-        createLegend(attributes);
     })
 
 };
@@ -244,6 +247,7 @@ function createLegend(attributes){
             var container = L.DomUtil.create('div', 'legend-control-container');
 
             //PUT YOUR SCRIPT TO CREATE THE TEMPORAL LEGEND HERE
+            container.innerHTML = '<p class="temporalLegend">Population in <span class="year">1980</span></p>';
 
             return container;
         }
@@ -289,7 +293,7 @@ function getData(map){
             //call function to create proportional symbols
             createPropSymbols(json,attributes);
             createSequenceControls(attributes);
-            
+            createLegend(attributes)
         })           
 
 };
