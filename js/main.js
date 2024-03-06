@@ -65,6 +65,8 @@ function calcStats(data){
     //add value to array
     }
 
+
+
     //get min, max, mean stats for our array
     dataStats.min = Math.min(...allValues);
     dataStats.max = Math.max(...allValues);
@@ -153,15 +155,11 @@ function pointToLayer(feature, latlng, attributes){
 
     //create another popup based on the first
     //var popupContent2 = Object.create(popupContent);
-
     //change the formatting of popup 2
     //popupContent2.formatted = "<h2>" + popupContent.importsCIF + " millions of dollars</h2>";
-
     //add popup to circle marker    
     //layer.bindPopup(popupContent2.formatted);
-
     //console.log(popupContent.formatted) //original popup content
-
     //bind the popup to the circle marker
     layer.bindPopup(popupContent.formatted, {
         offset: new L.Point(0,-options.radius) 
@@ -318,37 +316,71 @@ function createLegend(attributes){
 
                 //Step 3: assign the r and cy attributes  
                 var radius = calcPropRadius(dataStats[circles[i]]);  
+
+
                 var cy = 150 - radius;
 
-                //circle string
-                svg +=
-                '<circle class="legend-circle" id="' +
-                circles[i] +
-                '" r="' +
-                radius +
-                '"cy="' +
-                cy +
-                '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="75"/>';
+                if (i===2) {
+                    //circle string
+                    svg +=
+                    '<circle class="legend-circle" id="' +
+                    circles[i] +
+                    '" r="' +
+                    5 +
+                    '"cy="' +
+                    cy +
+                    '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="75"/>';
 
-                //evenly space out labels
-                var textY = i * 20 + 20;
+                    //evenly space out labels
+                    var textY = i * 30 + 40;
 
-                //text string
-                svg +=
-                '<text id="' +
-                circles[i] +
-                '-text" x="65" y="' +
-                textY +
-                '">' +
-                Math.round(dataStats[circles[i]] * 100) / 100 +
-                " million of dollars" +
-                "</text>";
+
+                    //text string
+                    svg +=
+                    '<text id="' +
+                    circles[i] +
+                    '-text" x="150" y="' +
+                    textY +
+                    '">' +
+                    100000 +
+                    " million of dollars" +
+                    "</text>";
+                } else {
+
+                    //circle string
+                    svg +=
+                    '<circle class="legend-circle" id="' +
+                    circles[i] +
+                    '" r="' +
+                    radius +
+                    '"cy="' +
+                    cy +
+                    '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="75"/>';
+
+                    //evenly space out labels
+                    var textY = i * 30 + 40;
+
+                    //text string
+                    svg +=
+                    '<text id="' +
+                    circles[i] +
+                    '-text" x="150" y="' +
+                    textY +
+                    '">' +
+                    Math.round(dataStats[circles[i]] * 100) / 100 +
+                    " million of dollars" +
+                    "</text>";
+                }
+
+
             };
 
 			//add annotation to include the values below threshold
-			svg += '<text x="70" y="65">(and below)</text>';
+			svg += '<text x="155" y="115">(and below)</text>';
 			svg += "</svg>";
-			svg += '<svg><circle class="legend-circle" id="nullCircle" r="' + minRadius + '"cy="' + 10 + '" fill="#ffffff" fill-opacity="0.8" stroke="#000000" cx="35"/><text x="70" y="14">Zero or N/A</text></svg>';
+			svg += '<svg><circle class="legend-circle" id="nullCircle" r="' + minRadius + '"cy="' + 15 + '" fill="#ffffff" fill-opacity="0.8" stroke="#000000" cx="75"/><text x="150" y="20">10000 million of dollars</text><text x="155" y="35">(and below)</svg>';
+    
+
 
             //add attribute legend svg to container
             container.insertAdjacentHTML('beforeend',svg);
