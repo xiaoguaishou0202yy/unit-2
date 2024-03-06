@@ -3,6 +3,18 @@
 //declare map var in global scope
 var map;
 //function to instantiate the Leaflet map
+// Display the overlay when the page is loaded
+window.onload = function () {
+    var overlay = document.getElementById('overlay');
+    overlay.style.display = 'flex';
+};
+
+// Hide the overlay when the user clicks anywhere on the page
+document.addEventListener('click', function () {
+    var overlay = document.getElementById('overlay');
+    overlay.style.display = 'none';
+});
+
 
 
 function createMap(){
@@ -13,8 +25,15 @@ function createMap(){
     });
 
     //add OSM base tilelayer
-    L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+    //L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    //    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+    //}).addTo(map);
+
+    var Stadia_AlidadeSmoothDark = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.{ext}', {
+        minZoom: 1,
+        maxZoom: 20,
+        attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        ext: 'png'
     }).addTo(map);
 
     //call getData function
@@ -24,6 +43,9 @@ function createMap(){
 
 //Flannery scaling ratio
 var dataStats={};
+var minRadius = 5;
+var minValueThreshold = 100000; //FOR DEMO ONLY: display smaller values as big as threshold
+var nullThreshold = 10000; //FOR DEMO ONLY: deal with "0" values
 
 function calcStats(data){
     //create empty array to store all data values
@@ -109,16 +131,16 @@ function pointToLayer(feature, latlng, attributes){
 
 
     // assuming it's above threshold min value
-	if (attValue > 100000) {
+	if (attValue > minValueThreshold) {
 		options.radius = calcPropRadius(attValue);
 	}
 	// assuming it's between zero and threshold min value
-	else if (attValue > 10000) {
-		options.radius = 5;
+	else if (attValue > minRadius) {
+		options.radius = minRadius;
 	}
 	// assuming it's zero
 	else {
-		options.radius = 5;
+		options.radius = minRadius;
 		options.fillColor = "#ffffff";
 	}
 
@@ -130,18 +152,18 @@ function pointToLayer(feature, latlng, attributes){
     var popupContent = new PopupContent(feature.properties, attribute);
 
     //create another popup based on the first
-    var popupContent2 = Object.create(popupContent);
+    //var popupContent2 = Object.create(popupContent);
 
     //change the formatting of popup 2
-    popupContent2.formatted = "<h2>" + popupContent.importsCIF + " millions of dollars</h2>";
+    //popupContent2.formatted = "<h2>" + popupContent.importsCIF + " millions of dollars</h2>";
 
     //add popup to circle marker    
-    layer.bindPopup(popupContent2.formatted);
+    //layer.bindPopup(popupContent2.formatted);
 
-    console.log(popupContent.formatted) //original popup content
+    //console.log(popupContent.formatted) //original popup content
 
     //bind the popup to the circle marker
-    layer.bindPopup(popupContent2.formatted, {
+    layer.bindPopup(popupContent.formatted, {
         offset: new L.Point(0,-options.radius) 
     });
 
@@ -247,17 +269,16 @@ function updatePropSymbols(attribute){
 
             layer.setRadius(radius);
 
-            if (Numattr>100000) {
+            if (Numattr>minValueThreshold) {
                 
                 var radius=calcPropRadius(Numattr);
                 layer.setRadius(radius);
                 layer.setStyle({fillColor:"#ff7800"});
-                console.log(radius)
-            } else if (Numattr>10000) {
-                layer.setRadius(5);
+            } else if (Numattr>nullThreshold) {
+                layer.setRadius(minRadius);
                 layer.setStyle({fillColor:"#ff7800"});
             } else {
-                layer.setRadius(5);
+                layer.setRadius(minRadius);
                 layer.setStyle({fillColor:"#ffffff"});
             }
 
@@ -276,7 +297,7 @@ function updatePropSymbols(attribute){
 function createLegend(attributes){
     var LegendControl = L.Control.extend({
         options: {
-            position: 'bottomright'
+            position: 'bottomright',
         },
 
         onAdd: function () {
@@ -284,10 +305,10 @@ function createLegend(attributes){
             var container = L.DomUtil.create('div', 'legend-control-container');
 
             //PUT YOUR SCRIPT TO CREATE THE TEMPORAL LEGEND HERE
-            container.innerHTML = '<p class="temporalLegend">Population in <span class="year">1995</span></p>';
+            container.innerHTML = '<h3 class="temporalLegend">Imports CIF in <span class="year">1995</span></h3>';
 
             //Step 1: start attribute legend svg string
-            var svg = '<svg id="attribute-legend" width="180px" height="100px">';
+            var svg = '<svg id="attribute-legend" width="300px" height="150px">';
 
             //array of circle names to base loop on
             var circles = ["max", "mean", "min"];
@@ -297,7 +318,7 @@ function createLegend(attributes){
 
                 //Step 3: assign the r and cy attributes  
                 var radius = calcPropRadius(dataStats[circles[i]]);  
-                var cy = 99 - radius;
+                var cy = 150 - radius;
 
                 //circle string
                 svg +=
@@ -307,7 +328,7 @@ function createLegend(attributes){
                 radius +
                 '"cy="' +
                 cy +
-                '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="30"/>';
+                '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="75"/>';
 
                 //evenly space out labels
                 var textY = i * 20 + 20;
@@ -320,12 +341,14 @@ function createLegend(attributes){
                 textY +
                 '">' +
                 Math.round(dataStats[circles[i]] * 100) / 100 +
-                " million" +
+                " million of dollars" +
                 "</text>";
             };
 
-            //close svg string  
-            svg += "</svg>"; 
+			//add annotation to include the values below threshold
+			svg += '<text x="70" y="65">(and below)</text>';
+			svg += "</svg>";
+			svg += '<svg><circle class="legend-circle" id="nullCircle" r="' + minRadius + '"cy="' + 10 + '" fill="#ffffff" fill-opacity="0.8" stroke="#000000" cx="35"/><text x="70" y="14">Zero or N/A</text></svg>';
 
             //add attribute legend svg to container
             container.insertAdjacentHTML('beforeend',svg);
@@ -359,6 +382,12 @@ function getCircleValues(attribute) {
         }
       }
     });
+
+    if (min<=100000) {
+        min=100000
+    } else {
+        min=min
+    }
   
     //set mean
     var mean = (max + min) / 2;
@@ -386,10 +415,10 @@ function updateLegend(attribute) {
       //get the radius
       var radius = calcPropRadius(circleValues[key]);
   
-      document.querySelector("#" + key).setAttribute("cy", 99 - radius);
+      document.querySelector("#" + key).setAttribute("cy", 150 - radius);
       document.querySelector("#" + key).setAttribute("r", radius)
   
-      document.querySelector("#" + key + "-text").textContent = Math.round(circleValues[key] * 100) / 100 + " million";
+      document.querySelector("#" + key + "-text").textContent = Math.round(circleValues[key] * 100) / 100 + " million of dolloars";
   
       /*$("#" + key).attr({
         cy: 59 - radius,

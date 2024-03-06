@@ -16,8 +16,8 @@ html, body {
 }
 
 #map {    
-    height: 600px;    
-    width: 75%;
+    height: 100%;    
+    width: 100%;
     display: inline-block;
 }
 
@@ -51,20 +51,18 @@ html, body {
 
 #forward {
     float: right;
-    padding-left: 1px;
-    padding-right: 1px
+
 }
     
 #reverse {  
     float: left;  
-    padding-left: 1px;
-    padding-right: 1px
+
 }
 
 
 .legend-control-container {
-    width: 150px;
-    /*height: 200px;*/
+    width: 300px;
+    height: 250px;
     font-weight: bold;
     background-color: rgba(255,255,255,0.8);
     padding: 10px;
@@ -75,3 +73,28 @@ html, body {
 .legend-control-container p{
      margin: 0;
 }
+
+
+
+#overlay {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+#overlay-content {
+    background-color: white;
+    width: 50%;
+    height: 40%;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+
