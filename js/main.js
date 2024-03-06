@@ -43,7 +43,7 @@ function createMap(){
 
 //Flannery scaling ratio
 var dataStats={};
-var minRadius = 5;
+var minRadius = 7.45656641310633;
 var minValueThreshold = 100000; //FOR DEMO ONLY: display smaller values as big as threshold
 var nullThreshold = 10000; //FOR DEMO ONLY: deal with "0" values
 
@@ -135,10 +135,12 @@ function pointToLayer(feature, latlng, attributes){
     // assuming it's above threshold min value
 	if (attValue > minValueThreshold) {
 		options.radius = calcPropRadius(attValue);
+        options.fillColor = "#ff7800";
 	}
 	// assuming it's between zero and threshold min value
-	else if (attValue > minRadius) {
+	else if (attValue > nullThreshold) {
 		options.radius = minRadius;
+        options.fillColor="#ff7800";
 	}
 	// assuming it's zero
 	else {
@@ -147,6 +149,10 @@ function pointToLayer(feature, latlng, attributes){
 	}
 
 
+
+
+
+    console.log(calcPropRadius(100000));
 
     //create circle marker layer
     var layer = L.circleMarker(latlng, options);
@@ -306,7 +312,7 @@ function createLegend(attributes){
             container.innerHTML = '<h3 class="temporalLegend">Imports CIF in <span class="year">1995</span></h3>';
 
             //Step 1: start attribute legend svg string
-            var svg = '<svg id="attribute-legend" width="300px" height="150px">';
+            var svg = '<svg id="attribute-legend" width="300px" height="160px">';
 
             //array of circle names to base loop on
             var circles = ["max", "mean", "min"];
@@ -326,9 +332,9 @@ function createLegend(attributes){
                     '<circle class="legend-circle" id="' +
                     circles[i] +
                     '" r="' +
-                    5 +
+                    7.45656641310633 +
                     '"cy="' +
-                    cy +
+                    (cy-7.45656641310633) +
                     '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="75"/>';
 
                     //evenly space out labels
