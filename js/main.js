@@ -21,7 +21,7 @@ function createMap(){
     //create the map
     map = L.map('map', {
         center: [20, 0],
-        zoom: 2
+        zoom: 3
     });
 
     //add OSM base tilelayer
@@ -312,7 +312,7 @@ function createLegend(attributes){
             container.innerHTML = '<h3 class="temporalLegend">Imports CIF in <span class="year">1995</span></h3>';
 
             //Step 1: start attribute legend svg string
-            var svg = '<svg id="attribute-legend" width="300px" height="160px">';
+            var svg = '<svg id="attribute-legend" width="310px" height="160px">';
 
             //array of circle names to base loop on
             var circles = ["max", "mean", "min"];
@@ -338,7 +338,7 @@ function createLegend(attributes){
                     '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="75"/>';
 
                     //evenly space out labels
-                    var textY = i * 30 + 40;
+                    var textY = i * 30 + 70;
 
 
                     //text string
@@ -364,7 +364,7 @@ function createLegend(attributes){
                     '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="75"/>';
 
                     //evenly space out labels
-                    var textY = i * 30 + 40;
+                    var textY = i * 30 + 70;
 
                     //text string
                     svg +=
@@ -382,9 +382,9 @@ function createLegend(attributes){
             };
 
 			//add annotation to include the values below threshold
-			svg += '<text x="155" y="115">(and below)</text>';
+			svg += '<text x="155" y="145">(and below)</text>';
 			svg += "</svg>";
-			svg += '<svg><circle class="legend-circle" id="nullCircle" r="' + minRadius + '"cy="' + 15 + '" fill="#ffffff" fill-opacity="0.8" stroke="#000000" cx="75"/><text x="150" y="20">10000 million of dollars</text><text x="155" y="35">(and below)</svg>';
+			svg += '<svg><circle class="legend-circle" id="nullCircle" r="' + minRadius + '"cy="' + 15 + '" fill="#ffffff" fill-opacity="0.8" stroke="#000000" cx="70"/><text x="145" y="10">10000 million of dollars</text><text x="150" y="25">(and below)</svg>';
     
 
 
