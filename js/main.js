@@ -107,6 +107,23 @@ function pointToLayer(feature, latlng, attributes){
     //Give each feature's circle marker a radius based on its attribute value
     options.radius = calcPropRadius(attValue);
 
+
+    // assuming it's above threshold min value
+	if (attValue > 100000) {
+		options.radius = calcPropRadius(attValue);
+	}
+	// assuming it's between zero and threshold min value
+	else if (attValue > 10000) {
+		options.radius = 5;
+	}
+	// assuming it's zero
+	else {
+		options.radius = 5;
+		options.fillColor = "#ffffff";
+	}
+
+
+
     //create circle marker layer
     var layer = L.circleMarker(latlng, options);
 
@@ -353,8 +370,6 @@ function getCircleValues(attribute) {
       min: min,
     };
   }
-
-
 
 
 
