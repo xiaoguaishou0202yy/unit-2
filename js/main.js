@@ -23,9 +23,9 @@ function createMap(){
 
 
 //Flannery scaling ratio
-var minValue;
+var dataStats={};
 
-function calcMinValue(data){
+function calcStats(data){
     //create empty array to store all data values
     var allValues = [];
     //loop through each city
@@ -42,20 +42,23 @@ function calcMinValue(data){
     
     //add value to array
     }
-    //console.log(allValues)
-    //get minimum value of our array
-    var minValue = Math.min(...allValues)
 
-    return minValue;
+    //get min, max, mean stats for our array
+    dataStats.min = Math.min(...allValues);
+    dataStats.max = Math.max(...allValues);
+    //calculate meanValue
+    var sum = allValues.reduce(function(a, b){return a+b;});
+    dataStats.mean = sum/ allValues.length;
+
 }
 
 
 //calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
     //constant factor adjusts symbol sizes evenly
-    var minRadius = 0.8;
+    var minRadius = 0.5;
     //Flannery Appearance Compensation formula
-    var radius = 1.0083 * Math.pow(attValue/minValue,0.5715) * minRadius
+    var radius = 1.0083 * Math.pow(attValue/dataStats.min,0.5715) * minRadius
 
     return radius;
 };
@@ -222,8 +225,24 @@ function updatePropSymbols(attribute){
             var props = layer.feature.properties;
             
             //update each feature's radius based on new attribute values
-            var radius = calcPropRadius(Number(String(props[attribute]).replaceAll(',','')));
+            Numattr=Number(String(props[attribute]).replaceAll(',',''))
+            var radius = calcPropRadius(Numattr);
+
             layer.setRadius(radius);
+
+            if (Numattr>100000) {
+                
+                var radius=calcPropRadius(Numattr);
+                layer.setRadius(radius);
+                layer.setStyle({fillColor:"#ff7800"});
+                console.log(radius)
+            } else if (Numattr>10000) {
+                layer.setRadius(5);
+                layer.setStyle({fillColor:"#ff7800"});
+            } else {
+                layer.setRadius(5);
+                layer.setStyle({fillColor:"#ffffff"});
+            }
 
             var popupContent = new PopupContent(props, attribute);  
 
@@ -234,6 +253,7 @@ function updatePropSymbols(attribute){
 
     })
 
+    updateLegend(attribute);
 };
 
 function createLegend(attributes){
@@ -247,7 +267,51 @@ function createLegend(attributes){
             var container = L.DomUtil.create('div', 'legend-control-container');
 
             //PUT YOUR SCRIPT TO CREATE THE TEMPORAL LEGEND HERE
-            container.innerHTML = '<p class="temporalLegend">Population in <span class="year">1980</span></p>';
+            container.innerHTML = '<p class="temporalLegend">Population in <span class="year">1995</span></p>';
+
+            //Step 1: start attribute legend svg string
+            var svg = '<svg id="attribute-legend" width="180px" height="100px">';
+
+            //array of circle names to base loop on
+            var circles = ["max", "mean", "min"];
+
+            //Step 2: loop to add each circle and text to svg string
+            for (var i=0; i<circles.length; i++){
+
+                //Step 3: assign the r and cy attributes  
+                var radius = calcPropRadius(dataStats[circles[i]]);  
+                var cy = 99 - radius;
+
+                //circle string
+                svg +=
+                '<circle class="legend-circle" id="' +
+                circles[i] +
+                '" r="' +
+                radius +
+                '"cy="' +
+                cy +
+                '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="30"/>';
+
+                //evenly space out labels
+                var textY = i * 20 + 20;
+
+                //text string
+                svg +=
+                '<text id="' +
+                circles[i] +
+                '-text" x="65" y="' +
+                textY +
+                '">' +
+                Math.round(dataStats[circles[i]] * 100) / 100 +
+                " million" +
+                "</text>";
+            };
+
+            //close svg string  
+            svg += "</svg>"; 
+
+            //add attribute legend svg to container
+            container.insertAdjacentHTML('beforeend',svg);
 
             return container;
         }
@@ -256,6 +320,72 @@ function createLegend(attributes){
     map.addControl(new LegendControl());
     
 };
+
+
+function getCircleValues(attribute) {
+    //start with min at highest possible and max at lowest possible number
+    var min = Infinity,
+      max = -Infinity;
+  
+    map.eachLayer(function (layer) {
+      //get the attribute value
+      if (layer.feature) {
+        var attributeValue = Number(String(layer.feature.properties[attribute]).replaceAll(',',''));
+        //test for min
+        if (attributeValue < min) {
+          min = attributeValue;
+        }
+  
+        //test for max
+        if (attributeValue > max) {
+          max = attributeValue;
+        }
+      }
+    });
+  
+    //set mean
+    var mean = (max + min) / 2;
+  
+    //return values as an object
+    return {
+      max: max,
+      mean: mean,
+      min: min,
+    };
+  }
+
+
+
+
+
+function updateLegend(attribute) {
+    //create content for legend
+    var year = attribute.split("_")[0];
+    //replace legend content
+    document.querySelector("span.year").innerHTML = year;
+  
+    //get the max, mean, and min values as an object
+    var circleValues = getCircleValues(attribute);
+  
+    for (var key in circleValues) {
+      //get the radius
+      var radius = calcPropRadius(circleValues[key]);
+  
+      document.querySelector("#" + key).setAttribute("cy", 99 - radius);
+      document.querySelector("#" + key).setAttribute("r", radius)
+  
+      document.querySelector("#" + key + "-text").textContent = Math.round(circleValues[key] * 100) / 100 + " million";
+  
+      /*$("#" + key).attr({
+        cy: 59 - radius,
+        r: radius,
+      });
+  
+      $("#" + key + "-text").text(
+        Math.round(circleValues[key] * 100) / 100 + " million"
+      );*/
+    }
+  }
 
 //Above Example 3.10...Step 3: build an attributes array from the data
 function processData(data){
@@ -289,7 +419,7 @@ function getData(map){
         .then(function(json){ 
             //calculate minimum data value
             var attributes = processData(json);
-            minValue = calcMinValue(json);
+            calcStats(json);
             //call function to create proportional symbols
             createPropSymbols(json,attributes);
             createSequenceControls(attributes);
